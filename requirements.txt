@@ -4,3 +4,4 @@ motor
 pydantic
 pymongo
 pydantic[email]
+google-cloud-storage

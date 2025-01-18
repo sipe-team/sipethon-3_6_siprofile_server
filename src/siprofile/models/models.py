@@ -48,6 +48,29 @@ class RequestUpdateCard(BaseModel):
     link: Optional[str] = None
 
 
+class RequestDeleteCard(BaseModel):
+    card_id: str
+
+
+class RequestGetCard(BaseModel):
+    card_id: str
+
+
+class RequestEnableCard(BaseModel):
+    card_id: str
+
+
+class RequestDisableCard(BaseModel):
+    card_id: str
+
+
+class RequestListCards(BaseModel):
+    job: Optional[str] = None
+    state: Optional[str] = None
+    labels: Optional[List[str]] = None
+    user_id: Optional[str] = None
+
+
 class RequestUpdateFile(BaseModel):
     file_id: str
     reference: Optional[Dict[str, str]] = None

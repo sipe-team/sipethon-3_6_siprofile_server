@@ -1,90 +1,86 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
-from bson import ObjectId
-from typing import Optional, List
-from ..models.models import Card
+from typing import List
+from ..models.models import (
+    Card,
+    RequestCreateCard,
+    RequestUpdateCard,
+    RequestDeleteCard,
+    RequestGetCard,
+    RequestEnableCard,
+    RequestDisableCard,
+    RequestListCards,
+)
 from ..models.database import cards_collection
+from ..utils.utils import generate_id
 
 router = APIRouter()
 
 
 @router.post("/create", response_model=Card)
-async def create_card(card: Card):
-    card.created_at = datetime.now()
-    card.updated_at = datetime.now()
+async def create_card(card: RequestCreateCard):
     card_dict = card.dict()
-    result = await cards_collection.insert_one(card_dict)
-    card_dict["_id"] = str(result.inserted_id)
-    return card_dict
+    card_dict["created_at"] = datetime.now()
+    card_dict["updated_at"] = datetime.now()
+    card_dict["card_id"] = generate_id(prefix="card")
+    await cards_collection.insert_one(card_dict)
+    return Card(**card_dict)
 
 
 @router.put("/update", response_model=Card)
-async def update_card(
-    card_id: str,
-    name: Optional[str] = None,
-    job: Optional[str] = None,
-    labels: Optional[List[str]] = None,
-    files: Optional[List[str]] = None,
-    link: Optional[str] = None,
-):
-    card = await cards_collection.find_one({"_id": ObjectId(card_id)})
-    if not card:
+async def update_card(card: RequestUpdateCard):
+    card_data = await cards_collection.find_one({"card_id": card.card_id})
+    if not card_data:
         raise HTTPException(status_code=404, detail="Card not found")
-    update_data = {}
-    if name:
-        update_data["name"] = name
-    if job:
-        update_data["job"] = job
-    if labels:
-        update_data["labels"] = labels
-    if files:
-        update_data["files"] = files
-    if link:
-        update_data["link"] = link
+    update_data = card.dict(exclude_unset=True)
     update_data["updated_at"] = datetime.now()
-    await cards_collection.update_one({"_id": ObjectId(card_id)}, {"$set": update_data})
-    card.update(update_data)
-    return card
+    await cards_collection.update_one({"card_id": card.card_id}, {"$set": update_data})
+    card_data.update(update_data)
+    return Card(**card_data)
 
 
 @router.delete("/delete")
-async def delete_card(card_id: str):
-    result = await cards_collection.delete_one({"_id": ObjectId(card_id)})
+async def delete_card(card: RequestDeleteCard):
+    result = await cards_collection.delete_one({"card_id": card.card_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Card not found")
-    return {"detail": "Card deleted"}
 
 
 @router.get("/get", response_model=Card)
-async def get_card(card_id: str):
-    card = await cards_collection.find_one({"_id": ObjectId(card_id)})
-    if not card:
+async def get_card(card: RequestGetCard):
+    card_data = await cards_collection.find_one({"card_id": card.card_id})
+    if not card_data:
         raise HTTPException(status_code=404, detail="Card not found")
-    return card
+    return Card(**card_data)
 
 
 @router.put("/enable", response_model=Card)
-async def enable_card(card_id: str):
-    card = await cards_collection.find_one({"_id": ObjectId(card_id)})
-    if not card:
+async def enable_card(card: RequestEnableCard):
+    card_data = await cards_collection.find_one({"card_id": card.card_id})
+    if not card_data:
         raise HTTPException(status_code=404, detail="Card not found")
     await cards_collection.update_one(
-        {"_id": ObjectId(card_id)}, {"$set": {"state": "ACTIVE"}}
+        {"card_id": card.card_id}, {"$set": {"state": "ACTIVE"}}
     )
-    await cards_collection.update_many(
-        {"_id": {"$ne": ObjectId(card_id)}}, {"$set": {"state": "DEACTIVE"}}
-    )
-    card["state"] = "ACTIVE"
-    return card
+    card_data["state"] = "ACTIVE"
+    return Card(**card_data)
 
 
 @router.put("/disable", response_model=Card)
-async def disable_card(card_id: str):
-    card = await cards_collection.find_one({"_id": ObjectId(card_id)})
-    if not card:
+async def disable_card(card: RequestDisableCard):
+    card_data = await cards_collection.find_one({"card_id": card.card_id})
+    if not card_data:
         raise HTTPException(status_code=404, detail="Card not found")
     await cards_collection.update_one(
-        {"_id": ObjectId(card_id)}, {"$set": {"state": "DEACTIVE"}}
+        {"card_id": card.card_id}, {"$set": {"state": "DEACTIVE"}}
     )
-    card["state"] = "DEACTIVE"
-    return card
+    card_data["state"] = "DEACTIVE"
+    return Card(**card_data)
+
+
+@router.get("/list", response_model=List[Card])
+async def list_cards(query: RequestListCards):
+    query_dict = query.dict(exclude_unset=True)
+    cards_cursor = cards_collection.find(query_dict)
+    cards = await cards_cursor.to_list(length=100)
+    return [Card(**card) for card in cards]

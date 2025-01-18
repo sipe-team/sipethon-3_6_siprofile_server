@@ -8,6 +8,43 @@ class BaseEntity(BaseModel):
     updated_at: Optional[datetime] = None
 
 
+class RequestCreateUser(BaseModel):
+    email: EmailStr
+    password: str = None
+    name: str = None
+
+
+class RequestUpdateUser(BaseModel):
+    user_id: str
+    name: Optional[str] = None
+    password: Optional[str] = None
+    profile_image: Optional[str] = None
+
+
+class RequestCreateCard(BaseModel):
+    user_id: str
+    name: str
+    company: str
+    job: str
+    labels: List[str]
+    files: Optional[List[str]] = None
+    link: Optional[str] = None
+
+
+class RequestUpdateCard(BaseModel):
+    card_id: str
+    name: Optional[str] = None
+    job: Optional[str] = None
+    labels: Optional[List[str]] = None
+    files: Optional[List[str]] = None
+    link: Optional[str] = None
+
+
+class RequestUpdateFile(BaseModel):
+    file_id: str
+    reference: Optional[Dict[str, str]] = None
+
+
 class User(BaseEntity):
     name: Optional[str] = None
     email: EmailStr

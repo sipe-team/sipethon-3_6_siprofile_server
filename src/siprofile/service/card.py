@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
-from typing import List
+from typing import Dict, Any
 from ..models.models import (
     Card,
     RequestCreateCard,
@@ -78,9 +78,15 @@ async def disable_card(card: RequestDisableCard):
     return Card(**card_data)
 
 
-@router.get("/list", response_model=List[Card])
+@router.get("/list", response_model=Dict[str, Any])
 async def list_cards(query: RequestListCards):
     query_dict = query.dict(exclude_unset=True)
+
+    if "labels" in query_dict:
+        query_dict["labels"] = {"$in": query_dict["labels"]}
+
     cards_cursor = cards_collection.find(query_dict)
     cards = await cards_cursor.to_list(length=100)
-    return [Card(**card) for card in cards]
+    total_count = await cards_collection.count_documents(query_dict)
+
+    return {"results": [Card(**card) for card in cards], "total_count": total_count}

@@ -17,4 +17,4 @@ COPY src ./src
 RUN pip install uvicorn
 
 # FastAPI 애플리케이션 실행
-CMD ["uvicorn", "src.siprofile.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.siprofile.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]

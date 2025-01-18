@@ -7,11 +7,13 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     environment:
-      - MONGO_URI=mongodb://mongo:27017/mydatabase
+      - MONGO_URI=mongodb://mongodb:27017/mydatabase
     volumes:
       - .:/app
+    restart: always
 
   mongodb:
     image: mongo:latest
@@ -21,6 +23,11 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "db.runCommand('ping').ok" ]
+      interval: 10s
+      retries: 5
+      start_period: 5s
 
 volumes:
   mongo_data:

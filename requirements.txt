@@ -5,3 +5,4 @@ pydantic
 pymongo
 pydantic[email]
 google-cloud-storage
+openai

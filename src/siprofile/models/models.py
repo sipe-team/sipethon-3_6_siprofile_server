@@ -87,6 +87,7 @@ class User(BaseEntity):
 
 
 class Card(BaseEntity):
+    card_id: str
     user_id: str
     name: str
     company: str

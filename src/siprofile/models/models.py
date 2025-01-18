@@ -10,8 +10,8 @@ class BaseEntity(BaseModel):
 
 class RequestCreateUser(BaseModel):
     email: EmailStr
-    password: str = None
-    name: str = None
+    name: Optional[str] = None
+    password: Optional[str] = None
 
 
 class RequestUpdateUser(BaseModel):
@@ -19,6 +19,14 @@ class RequestUpdateUser(BaseModel):
     name: Optional[str] = None
     password: Optional[str] = None
     profile_image: Optional[str] = None
+
+
+class RequestDeleteUser(BaseModel):
+    user_id: str
+
+
+class RequestGetUser(BaseModel):
+    user_id: str
 
 
 class RequestCreateCard(BaseModel):
@@ -46,6 +54,7 @@ class RequestUpdateFile(BaseModel):
 
 
 class User(BaseEntity):
+    user_id: str
     name: Optional[str] = None
     email: EmailStr
     password: Optional[str] = None

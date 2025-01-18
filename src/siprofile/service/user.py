@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
 from ..models.models import (

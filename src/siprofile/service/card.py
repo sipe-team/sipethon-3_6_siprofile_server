@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+import logging
+from fastapi import APIRouter, HTTPException, Query
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from ..models.models import (
     Card,
     RequestCreateCard,
@@ -13,6 +14,8 @@ from ..models.models import (
 )
 from ..models.database import cards_collection
 from ..utils.utils import generate_id
+
+_LOGGER = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -79,11 +82,23 @@ async def disable_card(card: RequestDisableCard):
 
 
 @router.get("/list", response_model=Dict[str, Any])
-async def list_cards(query: RequestListCards):
-    query_dict = query.dict(exclude_unset=True)
+async def list_cards(
+    job: Optional[str] = None,
+    state: Optional[str] = None,
+    labels: Optional[List[str]] = Query(None),
+    user_id: Optional[str] = None
+):
+    query_dict = {}
+    if job:
+        query_dict["job"] = job
+    if state:
+        query_dict["state"] = state
+    if labels:
+        query_dict["labels"] = {"$in": labels}
+    if user_id:
+        query_dict["user_id"] = user_id
 
-    if "labels" in query_dict:
-        query_dict["labels"] = {"$in": query_dict["labels"]}
+    _LOGGER.info(f"query_dict: {query_dict}")
 
     cards_cursor = cards_collection.find(query_dict)
     cards = await cards_cursor.to_list(length=100)

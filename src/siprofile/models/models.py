@@ -91,7 +91,7 @@ class Card(BaseEntity):
     name: str
     company: str
     job: str
-    state: str = "DEACTIVE"
+    state: str = "ACTIVE"
     labels: List[str]
     files: Optional[List[str]] = None
     link: Optional[str] = None
